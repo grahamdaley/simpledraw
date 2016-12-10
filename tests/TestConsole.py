@@ -85,7 +85,7 @@ class TestConsole(unittest.TestCase):
                 sys.stdin = sys.__stdin__
 
         output = self._read_output()[0]
-        expected_output = "\033[K" + test_prompt
+        expected_output = "\033[1;1f\033[K" + test_prompt
 
         self.assertEqual(output, expected_output, "get_input failed, incorrect input prompt")
         self.assertEqual(console_input, test_input, "get_input failed, incorrect console input")
