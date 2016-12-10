@@ -14,13 +14,6 @@ except ImportError:
     from io import StringIO
 
 
-def _fileno(file_or_fd):
-    fd = getattr(file_or_fd, 'fileno', lambda: file_or_fd)()
-    if not isinstance(fd, int):
-        raise ValueError("Expected a file (`.fileno()`) or a file descriptor")
-    return fd
-
-
 @contextmanager
 def stdout_redirected(to=os.devnull, stdout=None):
     """
@@ -29,20 +22,21 @@ def stdout_redirected(to=os.devnull, stdout=None):
     if stdout is None:
         stdout = sys.stdout
 
-    # copy stdout_fd before it is overwritten
-    stdout_fd = _fileno(stdout)
+    # Copy stdout_fd before it is overwritten
+    stdout_fd = stdout.fileno()
 
     with os.fdopen(os.dup(stdout_fd), 'wb') as copied:
-        # flush library buffers that dup2 knows nothing about
+        # Flush library buffers that dup2 knows nothing about
         stdout.flush()
         with open(to, 'wb') as to_file:
-            os.dup2(to_file.fileno(), stdout_fd)  # $ exec > to
+            os.dup2(to_file.fileno(), stdout_fd)
         try:
-            yield stdout # allow code to be run with the redirected stdout
+            # Allow code to be run with the redirected stdout
+            yield stdout
         finally:
-            # restore stdout to its previous value
+            # Restore stdout to its previous value
             stdout.flush()
-            os.dup2(copied.fileno(), stdout_fd)  # $ exec >&copied
+            os.dup2(copied.fileno(), stdout_fd)
 
 
 class TestConsole(unittest.TestCase):
@@ -69,7 +63,7 @@ class TestConsole(unittest.TestCase):
             Console.print_at(2, 2, test_string)
 
         output = self._read_output()[0]
-        expected = "\033[2;2f" + test_string
+        expected = Console.ESC_POS.format(2, 2) + test_string
 
         self.assertEqual(output.rstrip(), expected, "print_at failed, incorrect console output")
 
@@ -85,7 +79,7 @@ class TestConsole(unittest.TestCase):
                 sys.stdin = sys.__stdin__
 
         output = self._read_output()[0]
-        expected_output = "\033[1;1f\033[K" + test_prompt
+        expected_output = Console.ESC_POS.format(1, 1) + Console.ESC_CLR_LINE + test_prompt
 
         self.assertEqual(output, expected_output, "get_input failed, incorrect input prompt")
         self.assertEqual(console_input, test_input, "get_input failed, incorrect console input")

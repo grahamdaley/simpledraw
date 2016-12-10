@@ -23,6 +23,9 @@ class Console(object):
     Manages the text console
     """
 
+    ESC_POS = "\033[{0};{1}f"
+    ESC_CLR_LINE = "\033[K"
+
     @staticmethod
     def clear_screen():
         """
@@ -50,7 +53,7 @@ class Console(object):
         text : str
             The text string to display
         """
-        print("\033[" + str(row) + ";" + str(column) + "f" + text)
+        print(Console.ESC_POS.format(str(row), str(column)) + text)
 
     @staticmethod
     def get_input(prompt=""):
@@ -68,4 +71,4 @@ class Console(object):
         str
             Text input by user, without any newline character
         """
-        return raw_input("\033[1;1f\033[K" + prompt)
+        return raw_input(Console.ESC_POS.format(1, 1) + Console.ESC_CLR_LINE + prompt)
